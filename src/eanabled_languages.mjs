@@ -1,0 +1,40 @@
+/**
+ * @summary list of all available languages
+ * @use simply comment out the ones you don't wish to scrape
+ */
+export default [
+  'danish',
+  'norwegian',
+  'swedish',
+  'finnish',
+  'german',
+  'english',
+  'dutch',
+  'french',
+  'spanish',
+  'portuguese',
+  'russian',
+  'korean',
+  'chinese',
+  'japanese',
+  'italian',
+  'turkish',
+  'polish',
+  'arabic',
+  'thai',
+  'czech',
+  'hungarian',
+  'greek',
+  'romanian',
+  'slovak',
+  'bulgarian',
+  'indonesian',
+  'ukrainian',
+  'tagalog',
+  'catalan',
+  'hindi',
+  'malay',
+  'vietnamese',
+  'unknown',
+  '', // Top overall channels
+];

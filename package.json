@@ -2,9 +2,9 @@
   "name": "twitchtracker-scraper",
   "version": "1.0.0",
   "description": "For scraping top channel based on language.",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/index.mjs",
     "format": "prettier --write . "
   },
   "author": {
