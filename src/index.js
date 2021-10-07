@@ -1,6 +1,14 @@
 const fs = require('fs');
-const puppeteer = require('puppeteer');
 const ObjectsToCsv = require('objects-to-csv');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
+
+// Comes with a lot of build in features that makes it harder to detect us
+puppeteer.use(StealthPlugin());
+
+// Minimizes page load times
+puppeteer.use(AdblockerPlugin());
 
 // Language to scrape
 const LANGUAGE = 'danish';
@@ -23,6 +31,7 @@ const allData = [];
     await page.setViewport({ width: 1920, height: 1080 });
 
     for (let pageNumber = 1; pageNumber < MAX_PAGES + 1; ++pageNumber) {
+        console.time(`page ${pageNumber}`);
         let currentUrl = `https://twitchtracker.com/channels/viewership/${LANGUAGE || ''}?page=${pageNumber}`;
 
         await page.goto(currentUrl);
@@ -44,7 +53,7 @@ const allData = [];
         }
 
         for (let handleNumber = 1; handleNumber < amountPerPage; ++handleNumber) {
-            console.log(`${LANGUAGE || 'all'} streamers page ${pageNumber} number ${handleNumber}`);
+            console.time(`streamer page ${pageNumber} number ${handleNumber}`);
 
             const streamer = {
                 handle: null,
@@ -93,7 +102,11 @@ const allData = [];
             }
 
             allData.push(streamer);
+
+            console.timeEnd(`streamer page ${pageNumber} number ${handleNumber}`);
         }
+
+        console.timeEnd(`page ${pageNumber}`);
     }
 
     // If total_followers is higher than 1000 TwitchTracker shortens it with a K
