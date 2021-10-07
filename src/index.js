@@ -19,116 +19,116 @@ const MAX_PAGES = 5;
 const allData = [];
 
 (async () => {
-    const browser = await puppeteer.launch({
-        headless: false,
-        slowMo: 250,
-        defaultViewport: null,
-    });
+  const browser = await puppeteer.launch({
+    headless: false,
+    slowMo: 250,
+    defaultViewport: null,
+  });
 
-    const page = await browser.newPage();
+  const page = await browser.newPage();
 
-    // Twitch tracker hides fields on small screens
-    await page.setViewport({ width: 1920, height: 1080 });
+  // Twitch tracker hides fields on small screens
+  await page.setViewport({ width: 1920, height: 1080 });
 
-    for (let pageNumber = 1; pageNumber < MAX_PAGES + 1; ++pageNumber) {
-        console.time(`page ${pageNumber}`);
-        let currentUrl = `https://twitchtracker.com/channels/viewership/${LANGUAGE || ''}?page=${pageNumber}`;
+  for (let pageNumber = 1; pageNumber < MAX_PAGES + 1; ++pageNumber) {
+    console.time(`page ${pageNumber}`);
+    let currentUrl = `https://twitchtracker.com/channels/viewership/${LANGUAGE || ''}?page=${pageNumber}`;
 
-        await page.goto(currentUrl);
+    await page.goto(currentUrl);
 
-        try {
-            await page.waitForSelector('#channels > tbody', { timeout: 25000 });
-        } catch (error) {
-            console.log(
-                `The table on page ${pageNumber} didn't seem to render correctly. We might be getting capcha blocked.`,
-                error,
-            );
-            continue;
-        }
-
-        const amountPerPage = await page.$eval('#channels > tbody', (table) => table?.rows?.length);
-
-        if (amountPerPage === 0) {
-            break;
-        }
-
-        for (let handleNumber = 1; handleNumber < amountPerPage; ++handleNumber) {
-            console.time(`streamer page ${pageNumber} number ${handleNumber}`);
-
-            const streamer = {
-                handle: null,
-                language: LANGUAGE || '',
-                average_viewers: null,
-                total_followers: null,
-                twitch_link: null,
-            };
-
-            // Twitch tracker has tr in their table without data in them, so we need to make sure they exists before setting the data on each eval
-            try {
-                streamer.handle = await page.$eval(
-                    `#channels > tbody > tr:nth-child(${handleNumber}) > td:nth-child(3) > a`,
-                    (el) => el?.innerText?.toLowerCase(),
-                );
-            } catch (error) {
-                console.log('error getting handle', error);
-                continue;
-            }
-
-            if (!streamer?.handle?.length > 0) {
-                console.log('streamer handle length is 0 OR null');
-            }
-
-            streamer.twitch_link = `https://twitch.tv/${streamer.handle}`;
-
-            try {
-                streamer.average_viewers = await page.$eval(
-                    `#channels > tbody > tr:nth-child(${handleNumber}) > td.color-viewers.active > span`,
-                    (el) => el.innerText.toLowerCase(),
-                );
-            } catch (error) {
-                console.log('error getting avg viewers', error);
-                continue;
-            }
-
-            try {
-                streamer.total_followers = await page.$eval(
-                    `#channels > tbody > tr:nth-child(${handleNumber}) > td:nth-child(10) > span`,
-
-                    (el) => el.innerText.toLowerCase(),
-                );
-            } catch (error) {
-                console.log('error getting total followers', error);
-                continue;
-            }
-
-            allData.push(streamer);
-
-            console.timeEnd(`streamer page ${pageNumber} number ${handleNumber}`);
-        }
-
-        console.timeEnd(`page ${pageNumber}`);
+    try {
+      await page.waitForSelector('#channels > tbody', { timeout: 25000 });
+    } catch (error) {
+      console.log(
+        `The table on page ${pageNumber} didn't seem to render correctly. We might be getting capcha blocked.`,
+        error,
+      );
+      continue;
     }
 
-    // If total_followers is higher than 1000 TwitchTracker shortens it with a K
-    for (const streamer of allData) {
-        if (streamer.total_followers.toLowerCase().includes('k')) {
-            streamer.total_followers = parseFloat(streamer.total_followers) * 1000;
-        }
+    const amountPerPage = await page.$eval('#channels > tbody', (table) => table?.rows?.length);
+
+    if (amountPerPage === 0) {
+      break;
     }
 
-    // Make sure data folder exists
-    if (!fs.existsSync(`./data`)) {
-        fs.mkdirSync(`./data`);
+    for (let handleNumber = 1; handleNumber < amountPerPage; ++handleNumber) {
+      console.time(`streamer page ${pageNumber} number ${handleNumber}`);
+
+      const streamer = {
+        handle: null,
+        language: LANGUAGE || '',
+        average_viewers: null,
+        total_followers: null,
+        twitch_link: null,
+      };
+
+      // Twitch tracker has tr in their table without data in them, so we need to make sure they exists before setting the data on each eval
+      try {
+        streamer.handle = await page.$eval(
+          `#channels > tbody > tr:nth-child(${handleNumber}) > td:nth-child(3) > a`,
+          (el) => el?.innerText?.toLowerCase(),
+        );
+      } catch (error) {
+        console.log('error getting handle', error);
+        continue;
+      }
+
+      if (!streamer?.handle?.length > 0) {
+        console.log('streamer handle length is 0 OR null');
+      }
+
+      streamer.twitch_link = `https://twitch.tv/${streamer.handle}`;
+
+      try {
+        streamer.average_viewers = await page.$eval(
+          `#channels > tbody > tr:nth-child(${handleNumber}) > td.color-viewers.active > span`,
+          (el) => el.innerText.toLowerCase(),
+        );
+      } catch (error) {
+        console.log('error getting avg viewers', error);
+        continue;
+      }
+
+      try {
+        streamer.total_followers = await page.$eval(
+          `#channels > tbody > tr:nth-child(${handleNumber}) > td:nth-child(10) > span`,
+
+          (el) => el.innerText.toLowerCase(),
+        );
+      } catch (error) {
+        console.log('error getting total followers', error);
+        continue;
+      }
+
+      allData.push(streamer);
+
+      console.timeEnd(`streamer page ${pageNumber} number ${handleNumber}`);
     }
 
-    if (!fs.existsSync(`./data/${LANGUAGE || 'all'}`)) {
-        fs.mkdirSync(`./data/${LANGUAGE || 'all'}`);
+    console.timeEnd(`page ${pageNumber}`);
+  }
+
+  // If total_followers is higher than 1000 TwitchTracker shortens it with a K
+  for (const streamer of allData) {
+    if (streamer.total_followers.toLowerCase().includes('k')) {
+      streamer.total_followers = parseFloat(streamer.total_followers) * 1000;
     }
+  }
 
-    // Save data as json
-    const csv = new ObjectsToCsv(allData);
-    await csv.toDisk(`./data/${LANGUAGE || 'all'}/${LANGUAGE || 'all'}-${new Date().toISOString()}.csv`);
-    console.log('Done saving as csv');
+  // Make sure data folder exists
+  if (!fs.existsSync(`./data`)) {
+    fs.mkdirSync(`./data`);
+  }
 
-    await browser.close();
+  if (!fs.existsSync(`./data/${LANGUAGE || 'all'}`)) {
+    fs.mkdirSync(`./data/${LANGUAGE || 'all'}`);
+  }
+
+  // Save data as json
+  const csv = new ObjectsToCsv(allData);
+  await csv.toDisk(`./data/${LANGUAGE || 'all'}/${LANGUAGE || 'all'}-${new Date().toISOString()}.csv`);
+  console.log('Done saving as csv');
+
+  await browser.close();
 })();
