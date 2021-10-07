@@ -11,7 +11,7 @@ puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin());
 
 // Language to scrape
-const LANGUAGE = 'danish';
+const LANGUAGE = 'german';
 
 // Max amount of pages (Will return early if we reach last page)
 const MAX_PAGES = 5;
@@ -19,6 +19,7 @@ const MAX_PAGES = 5;
 const allData = [];
 
 (async () => {
+  console.time('total');
   const browser = await puppeteer.launch({
     headless: false,
     slowMo: 250,
@@ -109,11 +110,14 @@ const allData = [];
     console.timeEnd(`page ${pageNumber}`);
   }
 
-  // If total_followers is higher than 1000 TwitchTracker shortens it with a K
   for (const streamer of allData) {
+    // If total_followers is higher than 1000 TwitchTracker shortens it with a K
     if (streamer.total_followers.toLowerCase().includes('k')) {
       streamer.total_followers = parseFloat(streamer.total_followers) * 1000;
     }
+
+    // TwitchTracker uses commas to seperate values
+    streamer.average_viewers = streamer.average_viewers.replaceAll(',', '');
   }
 
   // Make sure data folder exists
@@ -125,10 +129,12 @@ const allData = [];
     fs.mkdirSync(`./data/${LANGUAGE || 'all'}`);
   }
 
+  await browser.close();
+
   // Save data as json
   const csv = new ObjectsToCsv(allData);
   await csv.toDisk(`./data/${LANGUAGE || 'all'}/${LANGUAGE || 'all'}-${new Date().toISOString()}.csv`);
   console.log('Done saving as csv');
 
-  await browser.close();
+  console.time('total');
 })();
