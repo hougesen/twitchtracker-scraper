@@ -64,12 +64,21 @@ console.log('Max pages each language: ', MAX_PAGES);
           .map((td) => {
             const hoursStreamed = td[4]?.outerText?.replace(',', '')?.split('\n');
 
+            const followers = td[9]?.outerText;
+            let followerMultiplier = 1;
+
+            if (followers?.toLowerCase()?.includes('m')) {
+              followerMultiplier = 1_000_000;
+            } else if (followers?.toLowerCase()?.includes('k')) {
+              followerMultiplier = 1_000;
+            }
+
             return {
               handle: td[2]?.outerText?.toLowerCase() || null,
-              average_viewers: td[3]?.outerText?.replace(',', '') ?? '',
-              hours_streamed: hoursStreamed?.length ? parseFloat(hoursStreamed[0]?.trim() ?? 0, 10) : 0,
-              total_followers: td[9]?.outerText ? parseFloat(td[9]?.outerText) * 1000 : null,
-              twitch_link: td[2]?.outerText ? `https://twitch.tv/${td[2]?.outerText?.toLowerCase()}` : null,
+              average_viewers: parseFloat(td[3]?.outerText?.replace(',', '') ?? 0) ?? 0,
+              hours_streamed: hoursStreamed?.length ? parseFloat(hoursStreamed[0]?.trim() ?? 0) : 0,
+              total_followers: td[9]?.outerText ? parseFloat(followers) * followerMultiplier : 0,
+              twitch_link: td[2]?.outerText ? `https://twitch.tv/${td[2]?.outerText?.toLowerCase()}` : '',
             };
           })
           .filter((elm) => elm?.handle !== null);
