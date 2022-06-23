@@ -3,7 +3,7 @@ import ObjectsToCsv from 'objects-to-csv';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker';
-import enabledLanguages from './eanabled_languages.mjs';
+import enabledLanguages from './enabled_languages.mjs';
 
 // Comes with a lot of build in features that makes it harder to detect us
 puppeteer.use(StealthPlugin());
