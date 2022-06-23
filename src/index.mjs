@@ -34,6 +34,8 @@ console.log('Max pages each language: ', MAX_PAGES);
     const languageData = [];
 
     for (let pageNumber = 1; pageNumber < MAX_PAGES + 1; ++pageNumber) {
+      console.log('currentLanguage', currentLanguage, 'pageNumber', pageNumber);
+
       console.time(`language ${currentLanguage || 'overall'} page ${pageNumber}`);
       let currentUrl = `https://twitchtracker.com/channels/viewership/${currentLanguage || ''}?page=${pageNumber}`;
 
@@ -42,7 +44,7 @@ console.log('Max pages each language: ', MAX_PAGES);
       try {
         await page.waitForSelector('#channels > tbody', { timeout: 25000 });
       } catch (error) {
-        console.log(
+        console.error(
           `The table on page ${pageNumber} didn't seem to render correctly. We might be getting capcha blocked.`,
           error,
         );
@@ -60,9 +62,12 @@ console.log('Max pages each language: ', MAX_PAGES);
           .call(document.querySelector('#channels > tbody').rows)
           .map((tr) => Array.prototype.slice.call(tr.cells))
           .map((td) => {
+            const hoursStreamed = td[4]?.outerText?.replace(',', '')?.split('\n');
+
             return {
               handle: td[2]?.outerText?.toLowerCase() || null,
-              average_viewers: td[3]?.outerText?.replace(',', '') || null,
+              average_viewers: td[3]?.outerText?.replace(',', '') ?? '',
+              hours_streamed: hoursStreamed?.length ? parseFloat(hoursStreamed[0]?.trim() ?? 0, 10) : 0,
               total_followers: td[9]?.outerText ? parseFloat(td[9]?.outerText) * 1000 : null,
               twitch_link: td[2]?.outerText ? `https://twitch.tv/${td[2]?.outerText?.toLowerCase()}` : null,
             };
